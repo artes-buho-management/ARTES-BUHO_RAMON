@@ -1,0 +1,42 @@
+services:
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: ramon
+      POSTGRES_PASSWORD: ramon_local_dev
+      POSTGRES_DB: ramon
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ramon"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    env_file:
+      - .env.ramon.local
+    environment:
+      DATABASE_URL: postgresql://ramon:ramon_local_dev@db:5432/ramon
+      RAMON_ENV: local
+    ports:
+      - "8001:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend/app:/app/app
+    restart: unless-stopped
+
+  ui:
+    build: ./ui
+    ports:
+      - "3001:80"
+    restart: unless-stopped
+
+volumes:
+  pgdata:

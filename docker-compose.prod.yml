@@ -1,0 +1,30 @@
+# docker-compose para Coolify (produccion)
+# - Sin puertos mapeados al host (Coolify gestiona routing por dominio)
+# - Postgres lo provee Coolify via DATABASE_URL inyectada en env
+# - Labels Coolify para asignar dominios a cada servicio
+
+services:
+  backend:
+    build: ./backend
+    environment:
+      RAMON_ENV: production
+      # DATABASE_URL, GEMINI_API_KEY, TELEGRAM_*, GOOGLE_*, OLLAMA_URL
+      # PC_OLLAMA_URL, PC_OLLAMA_MODEL, DRIVE_*, CRM_*, HOLDED_*, FIRMA_*
+      # se inyectan desde el panel de Coolify.
+    expose:
+      - "8000"
+    restart: unless-stopped
+    labels:
+      - coolify.managed=true
+      - coolify.domain=https://api.ramon.artesbuhomanagement.com
+      - coolify.port=8000
+
+  ui:
+    build: ./ui
+    expose:
+      - "80"
+    restart: unless-stopped
+    labels:
+      - coolify.managed=true
+      - coolify.domain=https://ramon.artesbuhomanagement.com
+      - coolify.port=80
